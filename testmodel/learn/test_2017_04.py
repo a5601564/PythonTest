@@ -1,5 +1,5 @@
 import tensorflow as tf
-from TensorFlow.firstTest import mnist
+
 
 x = tf.placeholder(tf.float32, [None, 784])
 W = tf.Variable(tf.zeros([784,10]))
@@ -8,7 +8,8 @@ b = tf.Variable(tf.zeros([10]))
 y = tf.nn.softmax(tf.matmul(x,W) + b)
 
 y_ = tf.placeholder("float", [None,10])
-cross_entropy = -tf.reduce_sum(y_*tf.log(y))
+new_y=y_*tf.log(y)
+cross_entropy = -tf.reduce_sum(new_y)
 train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
 
 init = tf.initialize_all_variables()
