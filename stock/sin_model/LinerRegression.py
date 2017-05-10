@@ -1,3 +1,5 @@
+from datetime import time
+
 import pandas as pd
 from io import StringIO
 
@@ -32,7 +34,7 @@ print(a * area + b)
 
 # 方式2：根据predict方法预测的价格
 print(regr.predict(area))
-
+date = time.strptime(str('2017-05-06'), "%Y-%m-%d")
 # 画图
 # 1.真实的点
 plt.scatter(df['square_feet'], df['price'], color='blue')
@@ -41,3 +43,26 @@ plt.scatter(df['square_feet'], df['price'], color='blue')
 plt.plot(df['square_feet'], regr.predict(df['square_feet'].reshape(-1,1)), color='red', linewidth=4)
 
 plt.show()
+
+#返回rate
+def priceASR(price,keys,values):
+    point_1=price*(1+0.1)
+    point_2=price*(1-0.1)
+
+    part_vol=0.00
+    total_vol=sum(values)
+    for index ,var in enumerate(keys) :
+        if var <= point_1 and var >=point_2:
+            part_vol+=values(index)
+
+    rate=part_vol/total_vol;
+    return  rate
+
+def isRightASR(rate):
+    if rate>0.9:
+        return True
+    else: 
+        return False
+
+
+
