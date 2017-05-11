@@ -20,7 +20,7 @@ capital_base = 100000
 # DataAPI取所有A股
 stocks = DataAPI.EquGet(equTypeCD='A',listStatusCD='L',field='secID,nonrestfloatA',pandas="1")
 universe = stocks['secID'].tolist()    # 转变为list格式，以便和DataAPI中的格式符合
-universe=StockScreener(Factor.LCAP.nsmall(200))
+universe=StockScreener(Factor.LCAP.nsmall(3000))
 fileds="secID,turnoverRate,negMarketValue,marketValue,openPrice,closePrice,turnoverVol"
 # 条件
 # 	前提条件
@@ -63,20 +63,28 @@ def handle_data(account):                  # 每个交易日的买入卖出指�
     closePrices=account.get_attribute_history("closePrice", 365)
     #前提条件
     for stock in account.universe:
+
         #print stock
         flag=tj1(account,closePrices[stock])
         if not flag:
-            return
+            continue
+
+
+        #log.info(stock+"======= tj1      ============")
         flag,winner_rate=tj2(account,stock)
         if not flag:
-            return
+            continue
+
+        #log.info(str(winner_rate)+"=====================tj2 tj2===========================")
         flag=tj3(winner_rate=winner_rate)
         if not  flag:
-            return
+            continue
         else:
-            logging.info(stock)
+            log.info(stock+"===========  猎豹出击  =================================")
+
 
 ##---------------------------------------      条件区        ---------------------------------------
+#满足跌幅的票子
 def tj1(account,price_list):
     price=price_list[-1]
     price_list_sort=sorted(price_list)
@@ -89,6 +97,7 @@ def tj1(account,price_list):
     else :
         return False
 
+#满足ASR的票子
 def tj2(account,stock):
     current_date=account.current_date
     keys,values,closePrice,winner_rate=get_stcok_chouma_status(universe,current_date,account,stock)
@@ -96,6 +105,7 @@ def tj2(account,stock):
     flag=isRightASR(rate)
     return flag,winner_rate
 
+#满足获利比例的票子
 def tj3(winner_rate):
     if winner_rate>0.9:
         return True
@@ -209,26 +219,14 @@ def winner(keys,values,price):
     winner_rate=winner_vol/total
     return winner_rate
 
-
-
-
-
-
-
 def get_stcok_chouma_status(universe,end,account,stock):
     #print account
     #print(account.current_date)
     trade_day=getDay(1,end)
     re_day=getDay(1000,end)
     data=DataAPI.MktEqudGet(tradeDate=u"",secID=stock,ticker=u"",beginDate=re_day,endDate=trade_day,isOpen="1",field=fileds,pandas="1")
-    #log.info(start)
-    #log.info(re_day)
     keys,values,closePrice,winner_rate=countCYQ(data,account)
     return keys,values,closePrice,winner_rate
-
-
-
-
 
 #返回rate
 def priceASR(price,keys,values):
@@ -239,7 +237,7 @@ def priceASR(price,keys,values):
     total_vol=sum(values)
     for index ,var in enumerate(keys) :
         if var <= point_1 and var >=point_2:
-            part_vol+=values(index)
+            part_vol+=values[index]
 
     rate=part_vol/total_vol;
     return  rate

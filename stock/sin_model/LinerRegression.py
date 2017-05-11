@@ -1,68 +1,48 @@
-from datetime import time
-
-import pandas as pd
-from io import StringIO
-
-from sklearn import linear_model
-
+from __future__ import print_function,division
+import tensorflow as tf
+import numpy as np
 import matplotlib.pyplot as plt
+import pylab as pl
+
+# Prepare train data
+train_X= x=np.linspace(0,4*np.pi,100)
+
+train_Y = np.sin(train_X)
+# pl.plot(train_X,train_Y)
+# pl.show()
+# Define the model
+X = tf.placeholder("float")
+Y = tf.placeholder("float")
+w = tf.Variable(1.0, name="weight")
+b = tf.Variable(1.0, name="bias")
+
+
+y_predict= tf.nn.relu(tf.multiply(X, w)+b)
+loss = tf.square(Y -y_predict)
+
+train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
 
 
-# 房屋面积与价格历史数据(csv文件)
-csv_data = 'square_feet,price\n150,6450\n200,7450\n250,8450\n300,9450\n350,11450\n400,15450\n600,18450\n'
+# Create session to run
+with tf.Session() as sess:
+    sess.run(tf.initialize_all_variables())
+    list_y=[]
+    epoch = 1
+    for i in range(10):
 
-# 读入dataframe
-df = pd.read_csv(StringIO(csv_data))
-print(df)
+        for (x, y) in zip(train_X, train_Y):
+            feed_dict={X: x,Y: y}
+            _, y_predict_value = sess.run([train_op,y_predict],feed_dict=feed_dict)
+            if i==9:
+                list_y.append(y_predict_value)
+                #print(feed_dict)
+        print("Epoch: {}, y_predict_value: {},".format(epoch, y_predict_value))
+
+        epoch += 1
 
 
-# 建立线性回归模型
-regr = linear_model.LinearRegression()
-
-# 拟合
-regr.fit(df['square_feet'].reshape(-1, 1), df['price']) # 注意此处.reshape(-1, 1)，因为X是一维的！
-
-# 不难得到直线的斜率、截距
-a, b = regr.coef_, regr.intercept_
-
-# 给出待预测面积
-area = 238.5
-
-# 方式1：根据直线方程计算的价格
-print(a * area + b)
-
-# 方式2：根据predict方法预测的价格
-print(regr.predict(area))
-date = time.strptime(str('2017-05-06'), "%Y-%m-%d")
-# 画图
-# 1.真实的点
-plt.scatter(df['square_feet'], df['price'], color='blue')
-
-# 2.拟合的直线
-plt.plot(df['square_feet'], regr.predict(df['square_feet'].reshape(-1,1)), color='red', linewidth=4)
-
+#draw
+plt.plot(train_X,train_Y,"+")
+plt.plot(train_X,list_y)
 plt.show()
-
-#返回rate
-def priceASR(price,keys,values):
-    point_1=price*(1+0.1)
-    point_2=price*(1-0.1)
-
-    part_vol=0.00
-    total_vol=sum(values)
-    for index ,var in enumerate(keys) :
-        if var <= point_1 and var >=point_2:
-            part_vol+=values(index)
-
-    rate=part_vol/total_vol;
-    return  rate
-
-def isRightASR(rate):
-    if rate>0.9:
-        return True
-    else: 
-        return False
-
-
-
