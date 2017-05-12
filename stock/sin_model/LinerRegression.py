@@ -11,17 +11,55 @@ train_Y = np.sin(train_X)
 # pl.plot(train_X,train_Y)
 # pl.show()
 # Define the model
-X = tf.placeholder("float")
-Y = tf.placeholder("float")
-w = tf.Variable(1.0, name="weight")
-b = tf.Variable(1.0, name="bias")
+
+# define placeholder for inputs to network
+# 区别：大框架，里面有 inputs x，y
+with tf.name_scope('inputs'):
+    X= tf.placeholder("float")
+    Y = tf.placeholder("float")
+    w = tf.Variable(1.0, name="weight")
+    b = tf.Variable(1.0, name="bias")
 
 
-y_predict= tf.nn.relu(tf.multiply(X, w)+b)
-loss = tf.square(Y -y_predict)
+def add_layer(inputs, in_size, out_size, activation_function=None):
+    # add one more layer and return the output of this layer
+    # 区别：大框架，定义层 layer，里面有 小部件
+    with tf.name_scope('layer'):
+        # 区别：小部件
+        with tf.name_scope('weights'):
+            Weights = tf.Variable(1.0, name="weight")
+        with tf.name_scope('biases'):
+            biases = tf.Variable(1.0, name="bias")
+        with tf.name_scope('Wx_plus_b'):
+            Wx_plus_b = tf.multiply(X, Weights)+biases
+        if activation_function is None:
+            outputs = Wx_plus_b
+        else:
+            outputs = activation_function(Wx_plus_b, )
+        return outputs
 
-train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
+# y_predict= tf.nn.relu(tf.multiply(X, w)+b)
+# loss = tf.square(Y -y_predict)
+#
+# train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
+# add hidden layer
+
+y_predict = add_layer(X, 1, 10, activation_function=tf.nn.relu)
+# add output layer
+prediction = add_layer(y_predict, 10, 1, activation_function=None)
+
+
+# the error between prediciton and real data
+# 区别：定义框架 loss
+with tf.name_scope('loss'):
+    loss= tf.square(Y -prediction)
+
+
+
+# 区别：定义框架 train
+with tf.name_scope('train'):
+    train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
 
 # Create session to run
@@ -33,7 +71,7 @@ with tf.Session() as sess:
 
         for (x, y) in zip(train_X, train_Y):
             feed_dict={X: x,Y: y}
-            _, y_predict_value = sess.run([train_op,y_predict],feed_dict=feed_dict)
+            _, y_predict_value = sess.run([train_op,prediction],feed_dict=feed_dict)
             if i==9:
                 list_y.append(y_predict_value)
                 #print(feed_dict)
@@ -46,3 +84,4 @@ with tf.Session() as sess:
 plt.plot(train_X,train_Y,"+")
 plt.plot(train_X,list_y)
 plt.show()
+
