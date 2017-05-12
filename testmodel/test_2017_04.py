@@ -49,6 +49,7 @@ sess.run(init)
 
 for i in range(2000):
     #print("train_step====")
+
     sess.run(train_step,feed_dict={xs:x_data,ys:y_data})
     if i % 50 ==0:
         print("====loss====")

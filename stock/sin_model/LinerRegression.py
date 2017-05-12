@@ -49,7 +49,7 @@ y_predict = add_layer(X, 1, 10, activation_function=tf.nn.relu)
 # add output layer
 prediction = add_layer(y_predict, 10, 1, activation_function=None)
 
-
+tf.summary.histogram('prediction', prediction)
 # the error between prediciton and real data
 # 区别：定义框架 loss
 with tf.name_scope('loss'):
@@ -61,20 +61,26 @@ with tf.name_scope('loss'):
 with tf.name_scope('train'):
     train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
-
+total_step = 0
 # Create session to run
 with tf.Session() as sess:
+    merged_summary_op = tf.summary.merge_all()
+    summary_writer = tf.summary.FileWriter('/tmp/mnist_logs', sess.graph)
     sess.run(tf.initialize_all_variables())
     list_y=[]
     epoch = 1
     for i in range(10):
-
+        total_step += 1
         for (x, y) in zip(train_X, train_Y):
             feed_dict={X: x,Y: y}
             _, y_predict_value = sess.run([train_op,prediction],feed_dict=feed_dict)
             if i==9:
                 list_y.append(y_predict_value)
                 #print(feed_dict)
+
+
+            summary_str = sess.run(merged_summary_op)
+            summary_writer.add_summary(summary_str, total_step)
         print("Epoch: {}, y_predict_value: {},".format(epoch, y_predict_value))
 
         epoch += 1
