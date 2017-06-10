@@ -61,6 +61,7 @@ with tf.name_scope('loss'):
 with tf.name_scope('train'):
     train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
+
 total_step = 0
 # Create session to run
 with tf.Session() as sess:
