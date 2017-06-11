@@ -16,8 +16,6 @@ loss = tf.square(Y - tf.multiply(X, w) - b)
 
 train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
-
-
 # Create session to run
 with tf.Session() as sess:
     sess.run(tf.initialize_all_variables())
@@ -26,8 +24,6 @@ with tf.Session() as sess:
     for i in range(10):
         for (x, y) in zip(train_X, train_Y):
             _, w_value, b_value = sess.run([train_op, w, b],feed_dict={X: x,Y: y})
-
-        print("loss ======"+sess.run(loss))
         print("Epoch: {}, w: {}, b: {}".format(epoch, w_value, b_value))
         epoch += 1
 
