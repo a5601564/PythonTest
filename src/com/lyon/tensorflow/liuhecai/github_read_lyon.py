@@ -39,31 +39,49 @@ def input_pipeline(fName, batch_size, num_epochs=None):
         min_after_dequeue=min_after_dequeue)
     return feature_batch, label_batch
 
+
+def add_layer(inputs, in_size, out_size, activation_function=None):
+    # add one more layer and return the output of this layer
+    # 区别：大框架，定义层 layer，里面有 小部件
+    with tf.name_scope('layer'):
+        # 区别：小部件
+        with tf.name_scope('weights'):
+            Weights = tf.Variable([1.0], name="weight")
+        with tf.name_scope('biases'):
+            biases = tf.Variable([1.0], name="bias")
+        with tf.name_scope('Wx_plus_b'):
+            Wx_plus_b = tf.multiply(train_X, Weights)+biases
+        if activation_function is None:
+            outputs = Wx_plus_b
+        else:
+            outputs = activation_function(Wx_plus_b, )
+        return outputs
 # these are the student label, features, and label:
 features, labels = input_pipeline(fileName, batch_size, try_epochs)
 
-def grade (index):
-    if index==[0]:
-        label='A'
-    elif index==[1]:
-        label='B'
-    elif index==[2]:
-        label='C'
-    return label
 
-x = tf.placeholder(tf.float32, [None, 6])
 
-W = tf.Variable(tf.zeros([6, 1]))
+# Prepare train data
+train_X = tf.placeholder("float32")
+train_Y = tf.placeholder("float32")
+# pl.plot(train_X,train_Y)
+# pl.show()
+# Define the model
 
-b = tf.Variable(tf.zeros([1]))
 
-y = tf.nn.softmax(tf.matmul(x, W) + b)
+y_predict = add_layer(train_X, 7, 49, activation_function=tf.nn.relu)
+# add output layer
+prediction = add_layer(y_predict, 49, 1, activation_function=None)
 
-y_ = tf.placeholder(tf.float32, [None, 1])
+tf.summary.histogram('prediction', prediction)
 
-cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_,logits=y))
+with tf.name_scope('loss'):
+    loss= tf.square(train_Y -prediction)
 
-train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cross_entropy)
+# 区别：定义框架 train
+with tf.name_scope('train'):
+    train_op = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
+
 
 init=tf.global_variables_initializer()
 
@@ -93,9 +111,8 @@ with tf.Session() as sess:
     coord.join(threads)
 
     for step in range(3000):  #
-        sess.run(train_step,feed_dict={x:feature_batch, y_:label_batch})
+        sess.run(train_op,feed_dict={train_X:feature_batch, train_Y:label_batch})
 
         if step %100==0:
-            print(step, sess.run(cross_entropy, feed_dict={x:feature_batch, y_:label_batch}))
-            print("W =", sess.run(W))
-            print("b =", sess.run(b))
+            print(step, sess.run(train_op, feed_dict={train_X:feature_batch, train_Y:label_batch}))
+
