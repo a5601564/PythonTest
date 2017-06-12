@@ -111,8 +111,10 @@ with tf.Session() as sess:
     coord.join(threads)
 
     for step in range(3000):  #
-        sess.run(train_op,feed_dict={train_X:feature_batch, train_Y:label_batch})
+        feed_dict={train_X:feature_batch, train_Y:label_batch}
+        sess.run(train_op,feed_dict=feed_dict)
 
         if step %100==0:
-            print(step, sess.run(train_op, feed_dict={train_X:feature_batch, train_Y:label_batch}))
+            _, y_predict_value = sess.run([train_op,prediction],feed_dict=feed_dict)
+            print(y_predict_value)
 
